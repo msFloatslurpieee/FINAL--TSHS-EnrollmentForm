@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TSHS Registrar — Strand Enrollment Storage</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            color: #1e293b;
+            min-height: 100vh;
+        }
+
+        #loginOverlay {
+            position: fixed;
+            inset: 0;
+            background: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: #ffffff;
+            width: 100%;
+            max-width: 400px;
+            padding: 35px 30px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+
+        .login-box h2 {
+            color: #0d47a1;
+            margin-bottom: 8px;
+        }
+
+        .login-box p {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 12px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 15px;
+            margin-bottom: 15px;
+            outline: none;
+        }
+
+        .login-box input:focus {
+            border-color: #1565c0;
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            background: #1565c0;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .login-box button:hover {
+            background: #0d47a1;
+        }
+
+        .error-text {
+            color: #dc2626;
+            font-size: 13px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .topbar {
+            background: #0f172a;
+            color: white;
+            padding: 18px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar h1 {
+            font-size: 20px;
+        }
+
+        .topbar span {
+            font-size: 12px;
+            color: #94a3b8;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .topbar-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-lock {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .strand-navbar {
+            background: #1e3a8a;
+            padding: 0 30px;
+            display: flex;
+            gap: 5px;
+            overflow-x: auto;
+        }
+
+        .nav-tab {
+            background: transparent;
+            color: #cbd5e1;
+            border: none;
+            padding: 15px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            border-bottom: 4px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .nav-tab:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-tab.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.15);
+            border-bottom: 4px solid #38bdf8;
+        }
+
+        .badge {
+            background: #0284c7;
+            color: white;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        .main-wrapper {
+            max-width: 1200px;
+            margin: 25px auto;
+            padding: 0 20px;
+        }
+
+        .storage-bins {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .bin-box {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 16px;
+            cursor: pointer;
+        }
+
+        .bin-box.active-bin {
+            border: 2px solid #1565c0;
+            background: #eff6ff;
+        }
+
+        .bin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: #0f172a;
+        }
+
+        .bin-total {
+            background: #dbeafe;
+            color: #1e40af;
+            font-size: 14px;
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+
+        .bin-sub {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .filter-bar {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-title h2 {
+            font-size: 18px;
+            color: #0f172a;
+        }
+
+        .filter-title p {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-controls input,
+        .filter-controls select {
+            padding: 9px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .btn-export {
+            background: #0f766e;
+            color: white;
+            border: none;
+            padding: 9px 15px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .student-card {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-top: 5px solid #1565c0;
+            border-radius: 10px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .ref-tag {
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 5px;
+        }
+
+        .strand-badge {
+            background: #dbeafe;
+            color: #1e40af;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 3px 10px;
+            border-radius: 5px;
+        }
+
+        .card-name {
+            font-size: 17px;
+            font-weight: bold;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+
+        .card-info {
+            font-size: 13px;
+            color: #475569;
+            line-height: 1.5;
+            margin-bottom: 14px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 12px;
+        }
+
+        .btn-view {
+            flex: 1;
+            background: #1565c0;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .btn-del {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .empty-box {
+            grid-column: 1 / -1;
+            background: white;
+            border: 2px dashed #cbd5e1;
+            border-radius: 10px;
+            padding: 45px 20px;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.65);
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .modal-box {
+            background: white;
+            width: 100%;
+            max-width: 650px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: #1e3a8a;
+            color: white;
+            padding: 16px 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 22px;
+            max-height: 72vh;
+            overflow-y: auto;
+        }
+
+        .detail-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 9px 0;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+            gap: 12px;
+        }
+
+        .detail-line span:first-child {
+            color: #64748b;
+            font-weight: bold;
+        }
+
+        .detail-line span:last-child {
+            color: #0f172a;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .modal-footer {
+            padding: 14px 22px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            text-align: right;
+        }
+
+        .btn-print {
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 9px 18px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loginOverlay">
+        <div class="login-box">
+            <h2>TSHS Enrollment Storage</h2>
+            <p>Authorized Enrollment Personnel Only</p>
+            <input type="password" id="passcodeInput" placeholder="Enter staff passcode" onkeypress="if(event.key==='Enter') unlockStorage()">
+            <button onclick="unlockStorage()">Access Strand Folders</button>
+            <div class="error-text" id="loginError">Incorrect passcode. Access denied.</div>
+        </div>
+    </div>
+
+    <div id="storageApp" style="display: none;">
+
+        <header class="topbar">
+            <div>
+                <h1>Taytay Senior High School — Strand Storage</h1>
+                <span>Registrar &amp; Enrollment Committee Filing System</span>
+            </div>
+            <div class="topbar-buttons">
+                <button class="btn-lock" onclick="lockStorage()">Lock Storage</button>
+            </div>
+        </header>
+
+        <nav class="strand-navbar">
+            <button class="nav-tab active" data-strand="ALL" onclick="switchStrand('ALL')">
+                All Strands <span class="badge" id="nav-ALL">0</span>
+            </button>
+            <button class="nav-tab" data-strand="TVL" onclick="switchStrand('TVL')">
+                TVL <span class="badge" id="nav-TVL">0</span>
+            </button>
+            <button class="nav-tab" data-strand="ABM" onclick="switchStrand('ABM')">
+                ABM <span class="badge" id="nav-ABM">0</span>
+            </button>
+            <button class="nav-tab" data-strand="HUMSS" onclick="switchStrand('HUMSS')">
+                HUMSS <span class="badge" id="nav-HUMSS">0</span>
+            </button>
+            <button class="nav-tab" data-strand="STEM" onclick="switchStrand('STEM')">
+                STEM <span class="badge" id="nav-STEM">0</span>
+            </button>
+        </nav>
+
+        <main class="main-wrapper">
+
+            <section class="storage-bins">
+                <div class="bin-box" id="bin-TVL" onclick="switchStrand('TVL')">
+                    <div class="bin-header"><span>TVL Folder</span><span class="bin-total" id="count-TVL">0</span></div>
+                    <div class="bin-sub">ICT, Culinary, SMAW</div>
+                </div>
+
+                <div class="bin-box" id="bin-ABM" onclick="switchStrand('ABM')">
+                    <div class="bin-header"><span>ABM Folder</span><span class="bin-total" id="count-ABM">0</span></div>
+                    <div class="bin-sub">Accountancy &amp; Business</div>
+                </div>
+
+                <div class="bin-box" id="bin-HUMSS" onclick="switchStrand('HUMSS')">
+                    <div class="bin-header"><span>HUMSS Folder</span><span class="bin-total" id="count-HUMSS">0</span></div>
+                    <div class="bin-sub">Humanities &amp; SocSci</div>
+                </div>
+
+                <div class="bin-box" id="bin-STEM" onclick="switchStrand('STEM')">
+                    <div class="bin-header"><span>STEM Folder</span><span class="bin-total" id="count-STEM">0</span></div>
+                    <div class="bin-sub">Science, Tech &amp; Math</div>
+                </div>
+            </section>
+
+            <section class="filter-bar">
+                <div class="filter-title">
+                    <h2 id="sectionHeading">All Stored Enrollment Forms</h2>
+                    <p id="sectionSubheading">Showing all submitted student forms across every strand</p>
+                </div>
+                <div class="filter-controls">
+                    <input type="text" id="searchInput" placeholder="Search student name or LRN..." onkeyup="displayCards()">
+                    <select id="gradeSelect" onchange="displayCards()">
+                        <option value="ALL">All Grades</option>
+                        <option value="Grade 11">Grade 11</option>
+                        <option value="Grade 12">Grade 12</option>
+                    </select>
+                    <button class="btn-export" onclick="exportCSV()">Export CSV</button>
+                </div>
+            </section>
+
+            <section class="cards-grid" id="cardsGrid"></section>
+
+        </main>
+    </div>
+
+    <div class="modal" id="formModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalTitle">Student Form Details</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+                <button class="btn-print" onclick="window.print()">Print Student Sheet</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const STAFF_PASSCODE = "tshs2026";
+        let activeStrand = "ALL";
+
+        const STRAND_DETAILS = {
+            ALL: { title: "All Stored Enrollment Forms", sub: "Showing all submitted student forms across every strand" },
+            TVL: { title: "TVL Track Storage", sub: "Stored forms for Technical-Vocational-Livelihood (ICT, Culinary, SMAW)" },
+            ABM: { title: "ABM Strand Storage", sub: "Stored forms for Accountancy, Business, and Management" },
+            HUMSS: { title: "HUMSS Strand Storage", sub: "Stored forms for Humanities and Social Sciences" },
+            STEM: { title: "STEM Strand Storage", sub: "Stored forms for Science, Technology, Engineering, and Mathematics" }
+        };
+
+        window.addEventListener("DOMContentLoaded", () => {
+            if (sessionStorage.getItem("tshs_staff_open") === "true") {
+                openApp();
+            }
+        });
+
+        function unlockStorage() {
+            const pass = document.getElementById("passcodeInput").value;
+            if (pass === STAFF_PASSCODE) {
+                sessionStorage.setItem("tshs_staff_open", "true");
+                openApp();
+            } else {
+                document.getElementById("loginError").style.display = "block";
+            }
+        }
+
+        function openApp() {
+            document.getElementById("loginOverlay").style.display = "none";
+            document.getElementById("storageApp").style.display = "block";
+            updateCounters();
+            displayCards();
+        }
+
+        function lockStorage() {
+            sessionStorage.removeItem("tshs_staff_open");
+            location.reload();
+        }
+
+        function getRecords() {
+            return JSON.parse(localStorage.getItem("tshs_enrollment_records")) || [];
+        }
+
+        function updateCounters() {
+            const records = getRecords();
+            const strands = ["TVL", "ABM", "HUMSS", "STEM"];
+
+            document.getElementById("nav-ALL").textContent = records.length;
+
+            strands.forEach(s => {
+                const count = records.filter(r => r.strand === s).length;
+                document.getElementById("nav-" + s).textContent = count;
+                document.getElementById("count-" + s).textContent = count;
+            });
+        }
+
+        function switchStrand(strand) {
+            activeStrand = strand;
+
+            document.querySelectorAll(".nav-tab").forEach(tab => {
+                tab.classList.toggle("active", tab.getAttribute("data-strand") === strand);
+            });
+
+            document.querySelectorAll(".bin-box").forEach(box => box.classList.remove("active-bin"));
+            if (strand !== "ALL") {
+                document.getElementById("bin-" + strand).classList.add("active-bin");
+            }
+
+            document.getElementById("sectionHeading").textContent = STRAND_DETAILS[strand].title;
+            document.getElementById("sectionSubheading").textContent = STRAND_DETAILS[strand].sub;
+
+            displayCards();
+        }
+
+        function displayCards() {
+            const records = getRecords();
+            const search = document.getElementById("searchInput").value.toLowerCase();
+            const grade = document.getElementById("gradeSelect").value;
+            const grid = document.getElementById("cardsGrid");
+
+            grid.innerHTML = "";
+
+            const filtered = records.filter(r => {
+                const matchStrand = (activeStrand === "ALL") || (r.strand === activeStrand);
+                const matchGrade = (grade === "ALL") || (r.grade === grade);
+                const fullName = `${r.firstName} ${r.middleName || ''} ${r.lastName} ${r.extensionName || ''}`.toLowerCase();
+                const lrnText = (r.lrn || '').toLowerCase();
+                const matchSearch = fullName.includes(search) || lrnText.includes(search);
+                return matchStrand && matchGrade && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-box">
+                        <h3>No Enrollment Forms Stored Here</h3>
+                        <p style="margin-top:6px;">Forms submitted under <strong>${activeStrand}</strong> will appear in this folder.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach((r, idx) => {
+                const recordId = r.refNo || idx;
+                const name = `${r.lastName}, ${r.firstName} ${r.middleName ? r.middleName + '.' : ''} ${r.extensionName || ''}`;
+                const card = document.createElement("div");
+                card.className = "student-card";
+                card.innerHTML = `
+                    <div>
+                        <div class="card-top">
+                            <span class="ref-tag">S.Y. ${r.schoolYear || '2026-2027'}</span>
+                            <span class="strand-badge">${r.strand}</span>
+                        </div>
+                        <div class="card-name">${name}</div>
+                        <div class="card-info">
+                            <strong>Grade:</strong> ${r.grade} | <strong>Class:</strong> ${r.classification || 'N/A'}<br>
+                            <strong>LRN:</strong> ${r.lrn || 'N/A'}<br>
+                            <strong>Contact:</strong> ${r.contact}<br>
+                            <strong>Submitted:</strong> ${r.dateSubmitted}
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn-view" onclick="viewForm('${recordId}')">Open Form</button>
+                        <button class="btn-del" onclick="removeForm('${recordId}')">Delete</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function viewForm(recordId) {
+            const records = getRecords();
+            const r = records.find((item, idx) => (item.refNo || String(idx)) === String(recordId));
+            if (!r) return;
+
+            const fullName = [r.firstName, r.middleName, r.lastName, r.extensionName].filter(Boolean).join(" ");
+            const fullAddress = `${r.address}, Brgy. ${r.finalBarangay || r.barangay || ''}, ${r.finalMunicipality || r.municipality || ''}, ${r.finalProvince || r.province || ''}`;
+
+            document.getElementById("modalTitle").textContent = `${fullName} — Enrollment Sheet`;
+            document.getElementById("modalBody").innerHTML = `
+                <div class="detail-line"><span>School Year</span><span>${r.schoolYear || "N/A"}</span></div>
+                <div class="detail-line"><span>Classification</span><span>${r.classification || "N/A"}</span></div>
+                <div class="detail-line"><span>Track &amp; Grade</span><span>${r.strand} — ${r.grade}</span></div>
+                <div class="detail-line"><span>LRN</span><span>${r.lrn || "N/A"}</span></div>
+                <div class="detail-line"><span>Student Name</span><span>${fullName}</span></div>
+                <div class="detail-line"><span>Birthday &amp; Age</span><span>${r.birthDate} (${r.age || "N/A"} yrs old)</span></div>
+                <div class="detail-line"><span>Sex</span><span>${r.sex}</span></div>
+                <div class="detail-line"><span>PSA Birth Cert. No.</span><span>${r.psaNo || "N/A"}</span></div>
+                <div class="detail-line"><span>Civil Status</span><span>${r.finalCivilStatus || r.civilStatus || "N/A"}</span></div>
+                <div class="detail-line"><span>Religion</span><span>${r.finalReligion || r.religion || "N/A"}</span></div>
+                <div class="detail-line"><span>Mother Tongue</span><span>${r.finalMotherTongue || r.motherTongue || "N/A"}</span></div>
+                <div class="detail-line"><span>IP Community</span><span>${r.isIP || "No"} (${r.ipSpecify || "N/A"})</span></div>
+                <div class="detail-line"><span>PWD Status</span><span>${r.isPWD || "No"} (${r.pwdSpecify || "N/A"})</span></div>
+                <div class="detail-line"><span>Student Contact</span><span>${r.contact}</span></div>
+                <div class="detail-line"><span>Email Address</span><span>${r.email || "N/A"}</span></div>
+                <div class="detail-line"><span>Complete Address</span><span>${fullAddress}</span></div>
+                <div class="detail-line"><span>Father's Name</span><span>${r.fatherName || "N/A"}</span></div>
+                <div class="detail-line"><span>Mother's Maiden Name</span><span>${r.motherName || "N/A"}</span></div>
+                <div class="detail-line"><span>Legal Guardian</span><span>${r.guardianName}</span></div>
+                <div class="detail-line"><span>Guardian Contact</span><span>${r.guardianContact}</span></div>
+                <div class="detail-line"><span>JHS Graduate School</span><span>${r.jhsSchool || "N/A"}</span></div>
+                <div class="detail-line"><span>Transferee School</span><span>${r.transfereeSchool || "N/A"}</span></div>
+                <div class="detail-line"><span>Date Submitted</span><span>${r.dateSubmitted}</span></div>
+            `;
+            document.getElementById("formModal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("formModal").style.display = "none";
+        }
+
+        function removeForm(recordId) {
+            if (!confirm("Delete this student form from storage?")) return;
+            const records = getRecords();
+            const updated = records.filter((item, idx) => (item.refNo || String(idx)) !== String(recordId));
+            localStorage.setItem("tshs_enrollment_records", JSON.stringify(updated));
+            updateCounters();
+            displayCards();
+        }
+
+        function exportCSV() {
+            const list = getRecords().filter(r => activeStrand === "ALL" || r.strand === activeStrand);
+            if (list.length === 0) {
+                alert("No forms in this strand folder to export.");
+                return;
+            }
+
+            let csv = "School Year,Classification,Grade,Track,LRN,Last Name,First Name,Middle Name,Extension,Birthday,Age,Sex,PSA No,Civil Status,Religion,Mother Tongue,IP Status,IP Specify,PWD Status,PWD Specify,Student Contact,Email,Street Address,Barangay,Municipality,Province,Father Name,Mother Maiden Name,Guardian Name,Guardian Contact,JHS School,Transferee School,Date Submitted\n";
+            list.forEach(r => {
+                const row = [
+                    r.schoolYear || '',
+                    r.classification || '',
+                    r.grade,
+                    r.strand,
+                    r.lrn || '',
+                    r.lastName,
+                    r.firstName,
+                    r.middleName || '',
+                    r.extensionName || '',
+                    r.birthDate,
+                    r.age || '',
+                    r.sex,
+                    r.psaNo || '',
+                    r.finalCivilStatus || r.civilStatus || '',
+                    r.finalReligion || r.religion || '',
+                    r.finalMotherTongue || r.motherTongue || '',
+                    r.isIP || '',
+                    r.ipSpecify || '',
+                    r.isPWD || '',
+                    r.pwdSpecify || '',
+                    r.contact,
+                    r.email || '',
+                    r.address,
+                    r.finalBarangay || r.barangay || '',
+                    r.finalMunicipality || r.municipality || '',
+                    r.finalProvince || r.province || '',
+                    r.fatherName || '',
+                    r.motherName || '',
+                    r.guardianName,
+                    r.guardianContact,
+                    r.jhsSchool || '',
+                    r.transfereeSchool || '',
+                    r.dateSubmitted
+                ].map(val => `"${String(val).replace(/"/g, '""')}"`);
+
+                csv += row.join(",") + "\n";
+            });
+
+            const blob = new Blob([csv], { type: "text/csv" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `TSHS_${activeStrand}_Enrollment_Forms.csv`;
+            link.click();
+        }
+    </script>
+
+</body>
+</html>
