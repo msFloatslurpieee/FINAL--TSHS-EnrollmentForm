@@ -694,8 +694,27 @@
         viewMode = mode;
         document.getElementById('mcalCalendarView').style.display = mode === 'calendar' ? 'block' : 'none';
         document.getElementById('mcalYearGrid').style.display = mode === 'year' ? 'grid' : 'none';
+        document.getElementById('mcalTypeView').style.display = mode === 'type' ? 'block' : 'none';
+        document.getElementById('mcalYearBtn').classList.toggle('active', mode === 'year');
 
-        function renderYearGrid() {
+        if (mode === 'calendar') renderMaterialDays();
+        if (mode === 'year') renderYearGrid();
+        if (mode === 'type') {
+            const manual = document.getElementById('mcalManualInput');
+            manual.value = document.getElementById('birthDate').value;
+            manual.focus();
+        }
+    }
+
+    function toggleYearGrid() {
+        switchCalView(viewMode === 'year' ? 'calendar' : 'year');
+    }
+
+    function toggleTypeMode() {
+        switchCalView(viewMode === 'type' ? 'calendar' : 'type');
+    }
+
+    function renderYearGrid() {
         const grid = document.getElementById('mcalYearGrid');
         grid.innerHTML = '';
         for (let y = 2016; y >= 1965; y--) {
@@ -721,7 +740,6 @@
         document.getElementById('mcalHeaderYear').textContent = calYear;
         renderMaterialDays();
     }
-
 
     function renderMaterialDays() {
         document.getElementById('mcalHeaderYear').textContent = calYear;
@@ -786,9 +804,9 @@
     function calculateAgeFromText(dateStr) {
         const parts = dateStr.split('/');
         if (parts.length !== 3) return;
-        const month = parseInt(parts, 10) - 1;
-        const day = parseInt(parts, 10);
-        const year = parseInt(parts, 10);
+        const month = parseInt(parts[0], 10) - 1;
+        const day = parseInt(parts[1], 10);
+        const year = parseInt(parts[2], 10);
 
         const birthDate = new Date(year, month, day);
         if (isNaN(birthDate.getTime()) || year < 1950 || year > 2020) return;
@@ -864,8 +882,7 @@
         sessionStorage.setItem('draftEnrollment', JSON.stringify(formData));
         window.location.href = 'review.html';
     });
-
-    function clearForm() {
+        function clearForm() {
         document.getElementById('enrollmentForm').reset();
         sessionStorage.removeItem('draftEnrollment');
         document.querySelectorAll('.other-input').forEach(el => {
