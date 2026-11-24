@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Review Enrollment - Taytay Senior High School</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        body {
+            background: linear-gradient(rgba(13, 71, 161, 0.45), rgba(13, 71, 161, 0.45)), 
+                        url('your-background.jpg') no-repeat center center fixed;
+            background-size: cover;
+            background-color: #e3f2fd;
+            min-height: 100vh;
+            padding: 30px;
+        }
+        .container {
+            width: 90%; max-width: 900px; margin: auto;
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 15px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #1976d2, #0d47a1);
+            color: white; text-align: center; padding: 30px 20px;
+        }
+        .review-container { padding: 30px; }
+        .notice-banner {
+            background: #e3f2fd; border-left: 5px solid #1565c0;
+            padding: 15px; border-radius: 6px; margin-bottom: 25px;
+            color: #0d47a1; font-size: 14px;
+        }
+        .section-title {
+            color: #1565c0; border-bottom: 2px solid #1565c0;
+            padding-bottom: 8px; margin-bottom: 15px; margin-top: 20px;
+        }
+        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .info-item {
+            background: #f8fbff; padding: 12px 15px;
+            border-radius: 8px; border: 1px solid #d0e3ff;
+        }
+        .info-item.full-width { grid-column: span 2; }
+        .info-label { font-size: 12px; color: #555; text-transform: uppercase; font-weight: bold; }
+        .info-value { font-size: 16px; color: #111; font-weight: bold; margin-top: 4px; }
+        .buttons { display: flex; justify-content: center; gap: 15px; margin-top: 30px; }
+        button {
+            border: none; padding: 13px 25px; border-radius: 8px;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+        }
+        .edit-btn { background: #e0e0e0; color: #333; }
+        .confirm-btn { background: #1565c0; color: white; }
+        .print-btn { display: none; background: #0288d1; color: white; }
+        .new-btn { display: none; background: #e0e0e0; color: #333; }
+        .success-box {
+            display: none; text-align: center; background: #e8f5e9;
+            border: 2px solid #2e7d32; color: #1b5e20;
+            padding: 20px; border-radius: 10px; margin-bottom: 25px;
+        }
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; width: 100%; }
+            .notice-banner, .buttons { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Taytay Senior High School</h1>
+        <p id="pageSubtitle">Review Your Enrollment Details — Step 2 of 2</p>
+    </div>
+
+    <div class="review-container">
+        <div class="notice-banner" id="noticeBanner">
+            Please review your information carefully. Click <strong>Edit Information</strong> if you need to change anything before submitting.
+        </div>
+
+        <div class="success-box" id="successBox">
+            <h2>Enrollment Submitted to Registrar!</h2>
+            <p>Reference Number: <strong id="refNumber"></strong></p>
+            <p>Your form has been recorded under the <strong id="confirmedStrand"></strong> strand.</p>
+        </div>
+
+        <h2 class="section-title">Student Information</h2>
+        <div class="info-grid">
+            <div class="info-item full-width">
+                <div class="info-label">Full Name</div>
+                <div class="info-value" id="revFullName">-</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Date of Birth</div>
+                <div class="info-value" id="revBirthDate">-</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Sex</div>
+                <div class="info-value" id="revSex">-</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Grade Level</div>
+                <div class="info-value" id="revGrade">-</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Strand</div>
+                <div class="info-value" id="revStrand">-</div>
+            </div>
+        </div>
+
+        <h2 class="section-title">Contact Information</h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Contact Number</div>
+                <div class="info-value" id="revContact">-</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Email Address</div>
+                <div class="info-value" id="revEmail">-</div>
+            </div>
+            <div class="info-item full-width">
+                <div class="info-label">Complete Address</div>
+                <div class="info-value" id="revAddress">-</div>
+            </div>
+        </div>
+
+        <h2 class="section-title">Parent / Guardian Information</h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Parent / Guardian Name</div>
+                <div class="info-value" id="revGuardianName">-</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Guardian Contact Number</div>
+                <div class="info-value" id="revGuardianContact">-</div>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button type="button" class="edit-btn" id="editBtn" onclick="window.location.href='index.html'">&larr; Edit Information</button>
+            <button type="button" class="confirm-btn" id="confirmBtn" onclick="finalizeEnrollment()">Confirm &amp; Submit</button>
+            <button type="button" class="print-btn" id="printBtn" onclick="window.print()">Print Enrollment Slip</button>
+            <button type="button" class="new-btn" id="newBtn" onclick="window.location.href='index.html'">Submit Another Form</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let draftData = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+        draftData = JSON.parse(sessionStorage.getItem('draftEnrollment'));
+        if (!draftData) {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        const fullName = [draftData.firstName, draftData.middleName, draftData.lastName].filter(Boolean).join(' ');
+        document.getElementById('revFullName').textContent = fullName;
+        document.getElementById('revBirthDate').textContent = draftData.birthDate;
+        document.getElementById('revSex').textContent = draftData.sex;
+        document.getElementById('revGrade').textContent = draftData.grade;
+        document.getElementById('revStrand').textContent = draftData.strand;
+        document.getElementById('revContact').textContent = draftData.contact;
+        document.getElementById('revEmail').textContent = draftData.email || 'N/A';
+        document.getElementById('revAddress').textContent = draftData.address;
+        document.getElementById('revGuardianName').textContent = draftData.guardianName;
+        document.getElementById('revGuardianContact').textContent = draftData.guardianContact;
+    });
+
+    function finalizeEnrollment() {
+        const refNo = 'TSHS-2026-' + Math.floor(100000 + Math.random() * 900000);
+        const now = new Date().toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+
+ 
+        const finalRecord = {
+            ...draftData,
+            refNo: refNo,
+            dateSubmitted: now
+        };
+
+    
+        const existingRecords = JSON.parse(localStorage.getItem('tshs_enrollment_records')) || [];
+        existingRecords.push(finalRecord);
+        localStorage.setItem('tshs_enrollment_records', JSON.stringify(existingRecords));
+
+ 
+        document.getElementById('refNumber').textContent = refNo;
+        document.getElementById('confirmedStrand').textContent = draftData.strand;
+        document.getElementById('pageSubtitle').textContent = 'Official Enrollment Summary';
+        document.getElementById('noticeBanner').style.display = 'none';
+        document.getElementById('successBox').style.display = 'block';
+
+        document.getElementById('editBtn').style.display = 'none';
+        document.getElementById('confirmBtn').style.display = 'none';
+        document.getElementById('printBtn').style.display = 'inline-block';
+        document.getElementById('newBtn').style.display = 'inline-block';
+
+        
+        sessionStorage.removeItem('draftEnrollment');
+    }
+</script>
+</body>
+</html>
